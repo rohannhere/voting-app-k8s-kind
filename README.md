@@ -79,7 +79,7 @@ graph TD
 
 * **Cloud Provider:** AWS (EC2 `c7i-flex.large (2vCPU, 4GiB Memory)` for multi-node capacity)
 * **Containerization:** Docker
-* **Kubernetes Environment:** Kind (Kubernetes in Docker, simmilar to minicube)
+* **Kubernetes Environment:** Kind (Kubernetes in Docker, similar to minicube)
 * **Continuous Deployment (GitOps):** ArgoCD
 * **Monitoring:** Official Kubernetes Dashboard
 * **Application Stack:** Python (Voting App), Node.js (Results App), Redis (Message Broker), PostgreSQL (Database)
