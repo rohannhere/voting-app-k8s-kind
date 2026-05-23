@@ -77,7 +77,7 @@ graph TD
 
 ## Tech Stack
 
-* **Cloud Provider:** AWS (EC2 `t2.medium` for multi-node capacity)
+* **Cloud Provider:** AWS (EC2 `c7i-flex.large (2vCPU, 4GiB Memory)` for multi-node capacity)
 * **Containerization:** Docker
 * **Kubernetes Environment:** Kind (Kubernetes in Docker, simmilar to minicube)
 * **Continuous Deployment (GitOps):** ArgoCD
