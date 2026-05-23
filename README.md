@@ -11,7 +11,7 @@ This repository contains a complete, end-to-end GitOps deployment project, built
 ```mermaid
 graph TD
     %% Define External Entities
-    Dev[Developer]
+    Dev[Developer/Operator]
     Git["GitHub Repository <br/> Manifests"]
     User[End User]
 
@@ -19,10 +19,10 @@ graph TD
     subgraph "AWS Cloud (EC2 t2.medium)"
         subgraph "Docker Environment"
             subgraph "Kind Kubernetes Cluster (3-Node)"
-                
+
                 %% GitOps Tool
                 Argo["ArgoCD <br/> GitOps Controller"]
-                
+
                 %% Application Microservices
                 subgraph "Voting App Namespace"
                     Vote["Vote App <br/> Frontend (Python) <br/> Port: 5000"]
@@ -31,6 +31,12 @@ graph TD
                     DB[("PostgreSQL <br/> Database")]
                     Result["Result App <br/> Frontend (Node.js) <br/> Port: 5001"]
                 end
+
+                %% **Added Kubernetes Dashboard Monitoring**
+                subgraph "Monitoring & Administration"
+                    K8sDash["Kubernetes Dashboard <br/> Monitoring UI"]
+                    DashSec["Service Account & <br/> ClusterRoleBinding <br/> (RBAC Security)"]
+                end
             end
         end
     end
@@ -38,11 +44,11 @@ graph TD
     %% GitOps Flow
     Dev -->|git push| Git
     Git -->|Monitors & Pulls| Argo
-    Argo -.->|Syncs Resources| Vote
-    Argo -.->|Syncs Resources| Redis
-    Argo -.->|Syncs Resources| Worker
-    Argo -.->|Syncs Resources| DB
-    Argo -.->|Syncs Resources| Result
+    Argo -.->|Syncs app resources| Vote
+    Argo -.->|Syncs app resources| Redis
+    Argo -.->|Syncs app resources| Worker
+    Argo -.->|Syncs app resources| DB
+    Argo -.->|Syncs app resources| Result
 
     %% App Traffic Flow
     Vote -->|1. Queues vote| Redis
@@ -50,9 +56,14 @@ graph TD
     Worker -->|3. Commits vote| DB
     DB -->|4. Reads tally| Result
 
-    %% External Access
+    %% External Access for End User
     User -->|Access via Port 5000| Vote
     User -->|Access via Port 5001| Result
+
+    %% **Operator Access for Monitoring**
+    Dev -->|Access via HTTPS & Token| K8sDash
+    K8sDash -.->|Secured by| DashSec
+    K8sDash -.->|Monitors Workloads| Vote
 ```
 
 - **Traffic Flow:**
@@ -68,7 +79,7 @@ graph TD
 
 * **Cloud Provider:** AWS (EC2 `t2.medium` for multi-node capacity)
 * **Containerization:** Docker
-* **Kubernetes Environment:** Kind (Kubernetes in Docker)
+* **Kubernetes Environment:** Kind (Kubernetes in Docker, simmilar to minicube)
 * **Continuous Deployment (GitOps):** ArgoCD
 * **Monitoring:** Official Kubernetes Dashboard
 * **Application Stack:** Python (Voting App), Node.js (Results App), Redis (Message Broker), PostgreSQL (Database)
@@ -90,17 +101,16 @@ Launch an Ubuntu `c7i-flex.large` (2vCPU, 4GiB Memory) EC2 instance on AWS. Ensu
 * Apply Group Changes: Refresh your user's group assignments so the new Docker permissions take effect immediately without requiring a logout.
 
 ### Step 3: Setup Kubernetes Cluster (Kind) & Kubectl
-* Download Kind: Fetch the Kind binary file directly from the official release repository.
-* Make Executable: Modify the file permissions of the downloaded binary so the system recognizes it as an executable program.
+* Download Kind: Fetch the Kind binary file directly from the official release repository. (available in provided install-kind.sh file)
+* Make Executable: Modify the file permissions of the .sh file so the system recognizes it as an executable program.
 
-![](<./screenshots/Screenshot 2026-05-22 102160.png>)
+![](<./screenshots/Screenshot 2026-05-22 102159.png>)
 
-* Move to Path: Move the Kind binary to your system's global binary folder so you can run the tool from any directory.
-* Create the Cluster: Instruct Kind to build a new Kubernetes cluster. You will point it to a configuration file that dictates the architecture—specifically, telling it to provision one control plane node and two worker nodes.
+* Create the Cluster: Instruct Kind to build a new Kubernetes cluster. Please refer given config.yml file that dictates the architecture—specifically, telling it to provision one control plane node and two worker nodes.
 
 ![](<./screenshots/Screenshot 2026-05-22 102711.png>)
 
-* Verify Kubectl: Ensure the Kubernetes command-line tool (kubectl) is installed so you can communicate with and manage your newly created cluster.
+* Verify Kubectl: Ensure the Kubernetes command-line tool (kubectl) is installed so you can communicate with and manage your newly created cluster. (refer install_kubectl.sh file)
 
 ![](<./screenshots/Screenshot 2026-05-22 103717.png>)
 
@@ -110,11 +120,11 @@ Launch an Ubuntu `c7i-flex.large` (2vCPU, 4GiB Memory) EC2 instance on AWS. Ensu
 
 ![](<./screenshots/Screenshot 2026-05-22 105136.png>)
 
-* Deploy ArgoCD: Pull the official installation manifests from the Argo Project repository and apply them to your cluster. This spins up the various ArgoCD services and controllers inside the namespace you just created.
+* Deploy ArgoCD: Pull the official installation manifests from the Argo Project repository and apply them to your cluster. This spins up the various ArgoCD services and controllers inside the namespace you just created. (you will find it in commands.md file)
 
 ![](<./screenshots/Screenshot 2026-05-22 105136.png>)
 
-* Retrieve Credentials: By default, ArgoCD generates a secure, randomized admin password and stores it as a Kubernetes Secret. You will need to query the cluster for this specific secret and decode it to get your initial login password.
+* Retrieve Credentials: By default, ArgoCD generates a secure, randomized admin password and stores it as a Kubernetes Secret. You will need to query the cluster for this specific secret and decode it to get your initial login password. (you will find it in commands.md file)
 
 ### Step 5: Deploy the Application via GitOps
 * Access the UI: Make the ArgoCD dashboard accessible over the network, either by exposing its service as a NodePort or by setting up a port-forward.
@@ -126,22 +136,20 @@ Launch an Ubuntu `c7i-flex.large` (2vCPU, 4GiB Memory) EC2 instance on AWS. Ensu
 
 ![](<./screenshots/Screenshot 2026-05-22 162419.png>)
 
-* Define Destination: Tell ArgoCD to deploy these manifests into the default namespace of the local cluster it is running on.
-
 ![](<./screenshots/Screenshot 2026-05-22 162528.png>)
 
-* Initiate Sync: Trigger the synchronization process. ArgoCD will read the manifests from GitHub and automatically orchestrate the creation of your Redis, * Postgres, Voting, and Result pods.
+* Initiate Sync: Trigger the synchronization process. ArgoCD will read the manifests from GitHub and automatically orchestrate the creation of your Redis, Postgres, Voting, and Result pods.
 
-![](<./screenshots/Screenshot 2026-05-22 162725.png>)
+![](<./screenshots/Screenshot 2026-05-22 163049.png>)
 
 ### Step 6: Expose the Application
 * Forward Frontend Traffic: Map the internal Kubernetes port for the Voting application to a port on your EC2 instance, binding it to all network interfaces so it can accept external traffic.
 
-![](<./screenshots/Screenshot 2026-05-22 162737.png>)
+![](<./screenshots/Screenshot 2026-05-22 163737.png>)
 
 * Forward Results Traffic: Repeat the port-forwarding process for the Results application on a separate port.
 
-![](<./screenshots/Screenshot 2026-05-22 162803.png>)
+![](<./screenshots/Screenshot 2026-05-22 163803.png>)
 
 * Access the App: Open a web browser and navigate to your EC2 instance's public IP address (specifying the respective ports) to cast a vote and watch the results update in real-time.
 
@@ -154,7 +162,6 @@ Launch an Ubuntu `c7i-flex.large` (2vCPU, 4GiB Memory) EC2 instance on AWS. Ensu
 
 ![](<./screenshots/Screenshot 2026-05-22 164923.png>)
 
-* Create Admin Service Account: Define a new administrative user (Service Account) inside the dashboard namespace. This user acts as the system identity that will be granted full visibility over your cluster resources.
 * Generate Authentication Token: Request a secure, long-lived bearer token specifically for your newly created administrative user. Because the Kubernetes Dashboard is highly secure by default, you will need to copy this token to authenticate and bypass the login screen.
 
 ![](<./screenshots/Screenshot 2026-05-22 165118.png>)
@@ -167,7 +174,6 @@ Launch an Ubuntu `c7i-flex.large` (2vCPU, 4GiB Memory) EC2 instance on AWS. Ensu
 
 ![](<./screenshots/Screenshot 2026-05-22 165941.png>)
 ![](<./screenshots/Screenshot 2026-05-22 170144.png>)
-![](<./screenshots/Screenshot 2026-05-22 164319.png>)
 ![](<./screenshots/Screenshot 2026-05-22 170206.png>)
 ![](<./screenshots/Screenshot 2026-05-22 170222.png>)
 ![](<./screenshots/Screenshot 2026-05-22 170235.png>)
