@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This repository contains a complete, end-to-end GitOps deployment project, built as part of an ongoing self-taught cloud and DevOps engineering journey. It demonstrates how to automate the deployment of a multi-tier application on a local Kubernetes cluster hosted on an AWS EC2 instance. By utilizing ArgoCD, the infrastructure automatically syncs with the manifests in this repository, ensuring a single source of truth, automated monitoring, and self-healing deployments.
+This repository contains a complete, end-to-end GitOps deployment project, built as part of an ongoing cloud and DevOps engineering journey. It demonstrates how to automate the deployment of a multi-tier application on a local Kubernetes cluster hosted on an AWS EC2 instance. By utilizing ArgoCD, the infrastructure automatically syncs with the manifests in this repository, ensuring a single source of truth, automated monitoring, and self-healing deployments.
 
 ---
 
