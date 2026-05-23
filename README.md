@@ -86,6 +86,15 @@ graph TD
 
 ---
 
+## Repository Structure
+All the necessary files to spin up and configure the cluster are organized as:
+* `kind-k8s/` : Contains all required shell scripts (`.sh`), Kubernetes manifests (`.yml`), and command cheat sheets (`commands.md`).
+* `images/` : Architecture diagrams and screenshots.
+* `README.md` : Project documentation.
+* `k8s-specifications/`: Contains all the Kubernetes manifests required to run the multi-tier application.
+
+---
+
 ## Steps to Deploy
 
 ### Step 1. Provision Infrastructure
@@ -177,3 +186,13 @@ Launch an Ubuntu `c7i-flex.large` (2vCPU, 4GiB Memory) EC2 instance on AWS. Ensu
 ![](<./screenshots/Screenshot 2026-05-22 170206.png>)
 ![](<./screenshots/Screenshot 2026-05-22 170222.png>)
 ![](<./screenshots/Screenshot 2026-05-22 170235.png>)
+
+---
+
+## Summary
+This project successfully bridges core infrastructure setup with modern cloud-native deployment strategies. By containerizing a complex, multi-tier application and managing it strictly via GitOps principles, this setup provides a robust, scalable, and automated deployment pipeline without manual intervention in the cluster.
+
+---
+
+## Credits
+Huge thanks to [TrainWithShubham](https://www.youtube.com/@TrainWithShubham) for the fantastic video tutorial that inspired and guided me for this project!
